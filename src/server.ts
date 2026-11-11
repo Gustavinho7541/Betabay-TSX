@@ -2,7 +2,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import routes from "./routes";
+import { router } from "./routes.js";
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // Rotas
-app.use(routes);
+app.use(router);
 
 // Inicialização do servidor
 const PORT = process.env.PORT || 3333;
