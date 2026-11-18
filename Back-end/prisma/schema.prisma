@@ -1,14 +1,107 @@
-import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+// Define o gerador do Prisma Client (responsável por gerar o código para acessar o banco)
+generator client {
+  provider = "prisma-client" // Define o tipo de client gerado
+  output   = "../src/generated/prisma" // Caminho onde o client será criado no projeto
+}
 
-export default defineConfig({
-  schema: "prisma/schema.prisma",
+// Configura a conexão com o banco de dados
+datasource db {
+  provider = "postgresql" // Define que o banco utilizado é o PostgreSQL
+}
 
-  migrations: {
-    path: "prisma/migrations"
-  },
+// Define um ENUM (valores fixos) para o tipo de usuário
+enum Role {
+  STAFF // Usuário comum
+  ADMIN // Usuário administrador
+}
 
-  datasource: {
-    url: env("DATABASE_URL")
-  }
-});
+// Modelo de usuário (tabela "users" no banco)
+model User {
+  id        String   @id @default(uuid()) // ID único gerado automaticamente (UUID)
+  name      String // Nome do usuário
+  email     String   @unique // Email único (não pode repetir)
+  password  String // Senha do usuário
+  role      Role     @default(STAFF) // Papel do usuário (padrão: STAFF)
+  createdAt DateTime @default(now()) // Data de criação
+  updatedAt DateTime @updatedAt // Atualiza automaticamente ao modificar o registro
+
+  @@map("users") // Nome da tabela no banco de dados
+}
+
+// Modelo de categorias de produtos
+model Category {
+  id        String   @id @default(uuid()) // ID único
+  name      String // Nome da categoria
+  createdAt DateTime @default(now()) // Data de criação
+  updatedAt DateTime @updatedAt // Data de atualização automática
+
+  products Product[] // Relação: uma categoria pode ter vários produtos
+
+  @@map("categories") // Nome da tabela no banco
+}
+
+// Modelo de produtos
+model Product {
+  id          String  @id @default(uuid()) // ID único
+  name        String // Nome do produto
+  price       Int // Preço em centavos (ex: 1000 = R$10,00)
+  description String // Descrição do produto
+  banner      String // URL ou caminho da imagem do produto
+  disabled    Boolean @default(false) // Indica se o produto está desativado
+
+  items Item[] // Relação com itens de pedidos
+
+  category_id String // Chave estrangeira da categoria
+  category    Category @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  // Relação: um produto pertence a uma categoria
+  // onDelete: Cascade → se a categoria for deletada, os produtos também serão
+
+  createdAt DateTime @default(now()) // Data de criação
+  updatedAt DateTime @updatedAt // Atualiza automaticamente
+
+  @@map("products") // Nome da tabela
+}
+
+// Modelo de pedidos
+model Order {
+  id    String @id @default(uuid()) // ID único
+  table Int // Número da mesa
+
+  status Boolean @default(false)
+  // Status do pedido:
+  // false = Pendente
+  // true = Pronto
+
+  draft Boolean @default(true)
+  // Indica se ainda é um rascunho:
+  // true = ainda não enviado
+  // false = enviado para a cozinha
+
+  name String? // Nome do cliente (opcional)
+
+  items Item[] // Relação: um pedido pode ter vários itens
+
+  createdAt DateTime @default(now()) // Data de criação
+  updatedAt DateTime @updatedAt // Atualiza automaticamente
+
+  @@map("orders") // Nome da tabela
+}
+
+// Modelo de itens do pedido (tabela intermediária entre Order e Product)
+model Item {
+  id     String @id @default(uuid()) // ID único
+  amount Int // Quantidade do produto no pedido
+
+  createdAt DateTime @default(now()) // Data de criação
+  updatedAt DateTime @updatedAt // Atualiza automaticamente
+
+  order_id String // Chave estrangeira do pedido
+  order    Order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  // Relação com pedido (se deletar o pedido, os itens também são deletados)
+
+  product_id String // Chave estrangeira do produto
+  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  // Relação com produto (se deletar o produto, os itens também são deletados)
+
+  @@map("items") // Nome da tabela
+}

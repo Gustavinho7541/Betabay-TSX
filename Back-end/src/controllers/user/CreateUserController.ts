@@ -1,27 +1,35 @@
-// Corrigido: Removido o 'type' para permitir o uso completo dos métodos do express
-// Corrigido: Removido o 'type' para permitir o uso completo dos métodos do express
-import type { Request, Response } from "express";
+// Importa os tipos Request e Response do Express (para tipagem)
+import { type Request, type Response } from "express";
 
-// Corrigido: Adicionado o '.js' no final do caminho como exigido pelo node16/nodenext
+// Importa o serviço responsável pela lógica de criação de usuário
 import { CreateUserService } from "../../services/user/CreateUserService.js";
 
+// Define a classe do controller (responsável por lidar com a requisição HTTP)
 class CreateUserController {
+
+    // Método que será chamado quando a rota for acessada
     async handle(req: Request, res: Response) {
+
+        // Desestrutura os dados enviados no corpo da requisição (body)
         const { name, email, password } = req.body;
 
+        // Exibe os dados recebidos no console (útil para debug)
+        console.log({ name, email, password });
+
+        // Cria uma instância do service
         const createUserService = new CreateUserService();
 
+        // Executa a lógica de criação de usuário e aguarda o retorno
         const user = await createUserService.execute({
-            name,
-            email,
-            password,
+            name: name,
+            email: email,
+            password: password
         });
 
-        return res.status(201).json({
-            message: "Usuário criado com sucesso",
-            user,
-        });
+        // Retorna a resposta em JSON para o cliente
+        res.json({ message: user });
     }
 }
 
+// Exporta o controller para ser usado nas rotas
 export { CreateUserController };
