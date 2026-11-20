@@ -16,6 +16,9 @@ class CreateUserController {
         // Exibe os dados recebidos no console (útil para debug)
         console.log({ name, email, password });
 
+        //Exibe os dados recebidos no console (útil para debug)
+        //console.log({ name, email, password });
+
         // Cria uma instância do service
         const createUserService = new CreateUserService();
 
@@ -27,7 +30,8 @@ class CreateUserController {
         });
 
         // Retorna a resposta em JSON para o cliente
-        res.json({ message: user });
+        //res.json({ message: user });/
+        res.json(user);
     }
 }
 

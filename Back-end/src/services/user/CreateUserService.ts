@@ -1,4 +1,6 @@
 import prismaClient from '../../prisma/index.js';
+// Importa a função hash do bcryptjs para criptografar a senha do usuário
+import { hash } from 'bcryptjs';
 
 // Interface que define os dados necessários para criar um usuário
 interface CreateUserProps {
@@ -25,20 +27,29 @@ class CreateUserService {
 
       // Lança um erro para impedir a criação de usuário duplicado
       throw new Error("Usuário já existente!");
-gi
+
       // ⚠️ Esse console.log nunca será executado (código morto),
       // pois o throw encerra a execução imediatamente
       console.log("Erro! Usuário já existe!");
     }
+    // Criptografa a senha antes de salvar no banco (boa prático de segurança)
+    const passwordHash = await hash(password, 8);
 
     // Cria um novo usuário no banco de dados
     const user = await prismaClient.user.create({
       data: {
         name: name,
         email: email,
-        password: password,
-      }
-    })
+        password: passwordHash,
+      },
+      select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      createAt: true,
+      },
+    });
 
     // Retorna o nome do usuário criado
     return user.name;
