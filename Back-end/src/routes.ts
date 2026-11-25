@@ -1,34 +1,47 @@
 import { Router } from "express";
 
 import { CreateUserController } from "./controllers/user/CreateUserController.js";
+import { AuthUserController } from "./controllers/user/AuthUserController.js";
+import { CreateCategoryController } from "./controllers/category/CreateCategoryController.js";
+import { ListCategoryController } from "./controllers/category/ListCategoryController.js";
 
 import { validateSchema } from "./middlewares/validateSchema.js";
+import { isAuthenticated } from "./middlewares/isAuthenticated.js";
+import { isAdmin } from "./middlewares/isAdmin.js";
 
 import { authSchema } from "./schemas/userSchema.js";
-import { AuthUserController } from "./controllers/user/AuthUserController.js";
+import { createCategorySchema } from "./schemas/categorySchema.js";
 
 const router = Router();
 
+// Cria um usuário
 router.post(
-    "/users",
-    validateSchema(authSchema),
-    new CreateUserController().handle
+  "/users",
+  validateSchema(authSchema),
+  new CreateUserController().handle
 );
 
-export { router };
-
-// Define uma rota do tipo POST no caminho "/session"
-// Essa rota será usada para autenticação (login do usuário)
+// Login (autenticação)
 router.post(
-
-  "/session", // endpoint da rota (ex: http://localhost:3000/session)
-
-  // Middleware que valida os dados enviados no body da requisição
-  // Ele usa um schema (authUserSchema) para garantir que email e senha estejam corretos
+  "/session",
   validateSchema(authSchema),
-
-  // Controller responsável por processar a requisição
-  // Aqui ele executa o método handle, que faz a autenticação do usuário
   new AuthUserController().handle
 );
 
+// Cria categoria (só administrador)
+router.post(
+  "/category",
+  isAuthenticated,
+  isAdmin,
+  validateSchema(createCategorySchema),
+  new CreateCategoryController().handle
+);
+
+// Lista categorias (qualquer usuário logado)
+router.get(
+  "/category",
+  isAuthenticated,
+  new ListCategoryController().handle
+);
+
+export { router };
